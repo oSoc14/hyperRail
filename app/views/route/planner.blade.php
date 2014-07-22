@@ -168,7 +168,7 @@
 
                         <div id="checkin-button" style="text-align: center;">
                             <li class="list-group-item" style="text-align: right;">
-                                <a href='#' ng-click="checkin($event)" class="btn btn-info" data-id="@{{connections.indexOf(conn)}}">Check in</a>
+                                <a href='#' ng-click="isCheckedIn($event)" class="btn btn-info" data-id="@{{connections.indexOf(conn)}}">Check in</a>
                             </li>
                         </div>
                         @endif

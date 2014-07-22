@@ -3,7 +3,7 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
   /*--------------------------------------------------------
    * INITIAL VARIABLES & SETUP
    *-------------------------------------------------------*/
-  
+
   // Init departure and destination as undefined
   $scope.departure = undefined;
   $scope.destination = undefined;
@@ -21,7 +21,7 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
    * FUNCTIONS THAT CAN BE CALLED
    *-------------------------------------------------------*/
 
-  $(document).keypress(function (e) {
+   $(document).keypress(function (e) {
     if(e.which === 13 && $scope.planning === true){
       $("#confirm").focus();
     }
@@ -30,8 +30,8 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
   /**
    *  Check if we can dump the data
    */
-  /*jshint quotmark: double */
-  $scope.confirmRouteSearch = function () {
+   /*jshint quotmark: double */
+   $scope.confirmRouteSearch = function () {
     if ($scope.departure && $scope.destination && "@id" in $scope.departure && "@id" in $scope.destination) {
       $scope.data = {
         "departure" : decodeURIComponent($scope.departure),
@@ -46,35 +46,67 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
       $scope.loading = true;
 
       window.history.pushState("departure", "iRail.be", "?to=" + encodeURIComponent($scope.destination["@id"])
-                               + "&from=" + encodeURIComponent($scope.departure["@id"])
-                               + "&date=" + ($filter("date")($scope.mydate, "ddMMyy"))
-                               + "&time=" + ($filter("date")($scope.mytime, "HHmm"))
-                               + "&timeSel=" + $scope.timeoption
-                              );
+       + "&from=" + encodeURIComponent($scope.departure["@id"])
+       + "&date=" + ($filter("date")($scope.mydate, "ddMMyy"))
+       + "&time=" + ($filter("date")($scope.mytime, "HHmm"))
+       + "&timeSel=" + $scope.timeoption
+       );
 
       var $urlInWindow = document.URL;
 
       $http.get($urlInWindow)
-        .success(function (data) {
-          $scope.parseResults(data);
+      .success(function (data) {
+        // procedure to obtain the departure URI and put it in the JSON
+        for(var i=0; i<data.connection.length;i++)
+        {
+          var veh = data.connection[i]['departure']['vehicle'].split(".");
+          var vehicle = veh[veh.length-1];
+          console.log('vehicle' + vehicle);
+          var uri;
 
-          $scope.loading = false;
-          $scope.results = true;
-        })
-        .error(function () {
-          $scope.error = true;
-          $scope.loading = false;
-          $scope.results = false;
-          $scope.planning = false;
-        });
-    }
-  };
+          $http({method: 'GET', url: $scope.departure['@id'].replace('.be', '.dev').replace('http://', 'https://'), headers: {'Accept': 'application/ld+json'}})
+          .success(function(data, status, headers, config) {
+              //Look for correct departure-URI      
+              for (var j = 0; j < data['@graph'].length; j++) {
+                                console.log('ene: ' + data['@graph'][j]['routeLabel'].replace(' ', ''));        
+                                console.log(vehicle);
+                                console.log(data['@graph'][j]['routeLabel'].replace(' ', '') == vehicle);
+
+                if (data['@graph'][j]['routeLabel'].replace(' ', '') == vehicle) {
+                  uri = data['@graph'][j];
+                  console.log('ja');
+                  break;
+                }      
+              }
+            })
+          .error(function () {
+              // called asynchronously if an error occurs
+              // or server returns response with an error status.
+              console.log('failure');
+            });
+
+          data.connection[i].uri = uri;
+        }
+
+        $scope.parseResults(data);
+
+        $scope.loading = false;
+        $scope.results = true;
+      })
+.error(function () {
+  $scope.error = true;
+  $scope.loading = false;
+  $scope.results = false;
+  $scope.planning = false;
+});
+}
+};
 
   /**
    * Used to interpret the new station id
    * @param string
    */
-  $scope.findStationById = function (suppliedIdentifierString) {
+   $scope.findStationById = function (suppliedIdentifierString) {
     for (var i = 0, len = $scope.stations['@graph'].length; i < len; i=i+1) {
       if (($scope.stations["@graph"][i]["@id"]).indexOf(suppliedIdentifierString) !== -1) {
         return $scope.stations["@graph"][i];
@@ -86,7 +118,7 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
    * Parse the results
    * @param data
    */
-  $scope.parseResults = function (data) {
+   $scope.parseResults = function (data) {
     if ($scope.timeoption === "arrive") {
       // Reverse connections
       // First result should be close to your set time
@@ -98,7 +130,7 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
   /**
    * Save the entered data and request
    */
-  $scope.save = function () {
+   $scope.save = function () {
     // Check if time and date are set
     if ($scope.mydate === undefined) {
       $scope.data = null;
@@ -133,131 +165,119 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
   /**
    * Save the entered data and request
    */
-  $scope.checkin = function (e) {
-    var con = $scope.connections[$(e.target).data('id')];
+//    $scope.checkin = function (e) {
+//     var con = $scope.connections[$(e.target).data('id')];
 
-    var veh = con['departure']['vehicle'].split(".");
-    var vehicle = veh[veh.length-1];
- 
+//     var veh = con['departure']['vehicle'].split(".");
+//     var vehicle = veh[veh.length-1];
 
-    $http({method: 'GET', url: $scope.departure['@id'].replace('.be', '.dev').replace('http://', 'https://'), headers: {'Accept': 'application/ld+json'}}).
-    success(function(data, status, headers, config) {
 
-      //Look for correct departure      
-      for (var i = 0; i < data['@graph'].length; i++) {
-        if (data['@graph'][i]['routeLabel'].replace(' ', '') == vehicle) {
-          var dep = data['@graph'][i];
-          break;
-        }
-        
-      }
-       
+//     $http({method: 'GET', url: $scope.departure['@id'].replace('.be', '.dev').replace('http://', 'https://'), headers: {'Accept': 'application/ld+json'}}).
+//     success(function(data, status, headers, config) {
+
+//       //Look for correct departure      
+//       for (var i = 0; i < data['@graph'].length; i++) {
+//         if (data['@graph'][i]['routeLabel'].replace(' ', '') == vehicle) {
+//           var dep = data['@graph'][i];
+//           break;
+//         }
+
+//       }
+
+//         /**
+//           Send post request with complete URI of departure and id of user for storage in DB
+//           Currently we use get but in future switch to post
+//           */
+
+//           var request = $http({
+//             method: "post",
+//             headers: {'content-type': 'application/json'},
+//             url: "https://irail.dev/checkins",
+//             data: {
+//               departure: dep['@id']
+//             }
+//           }).success(function(response){
+//                 // Change css class and text
+//                 $(e.target).toggleClass('label-warning');
+//                 if ($(e.target)[0]['innerHTML'] == 'Check in') {
+//                   $(e.target)[0]['innerHTML'] = 'Check out';
+//                 } else {
+//                   $(e.target)[0]['innerHTML'] = 'Check in';
+//                 }
+
+
+
+//               }).error(function(error){
+
+//               });
+
+
+
+
+//             }).
+// error(function(data, status, headers, config) {
+//       // called asynchronously if an error occurs
+//       // or server returns response with an error status.
+//       console.log('failure');
+//     });
+
+
+
+// };
+
+$scope.isCheckedIn = function (e) {
+  console.log("yop");
+  var con = $scope.connections[$(e.target).data('id')];
+
+  var uri = $scope.connections[1].uri;
+  console.log( $scope.connections[1]);
+
+  
         /**
           Send post request with complete URI of departure and id of user for storage in DB
           Currently we use get but in future switch to post
-        */
+          */
 
-        var request = $http({
-            method: "post",
-            headers: {'content-type': 'application/json'},
-            url: "https://irail.dev/checkins",
-            data: {
-                departure: dep['@id']
-            }
-        }).success(function(response){
-                // Change css class and text
-                $(e.target).toggleClass('label-warning');
-                if ($(e.target)[0]['innerHTML'] == 'Check in') {
-                  $(e.target)[0]['innerHTML'] = 'Check out';
-                } else {
-                  $(e.target)[0]['innerHTML'] = 'Check in';
-                }
+        //   var request = $http({
+        //     method: "get",
+        //     headers: {'content-type': 'application/json'},
+        //     url: "https://irail.dev/checkins",
+        //   }).success(function(response){
+        //   // Check if checked in
 
-
-
-        }).error(function(error){
-
-        });
-
-
-
-
-    }).
-    error(function(data, status, headers, config) {
-      // called asynchronously if an error occurs
-      // or server returns response with an error status.
-      console.log('failure');
-    });
-
-    
-  
-  };
-
-  $scope.isCheckedIn = function (e) {
-    console.log("yop");
-    var con = $scope.connections[$(e.target).data('id')];
-
-    var veh = con['departure']['vehicle'].split(".");
-    var vehicle = veh[veh.length-1];
- 
-
-    $http({method: 'GET', url: $scope.departure['@id'].replace('.be', '.dev').replace('http://', 'https://'), headers: {'Accept': 'application/ld+json'}}).
-    success(function(data, status, headers, config) {
-
-      //Look for correct departure      
-      for (var i = 0; i < data['@graph'].length; i++) {
-        if (data['@graph'][i]['routeLabel'].replace(' ', '') == vehicle) {
-          var dep = data['@graph'][i];
-          break;
-        }
-        
-      }
-       
-        /**
-          Send post request with complete URI of departure and id of user for storage in DB
-          Currently we use get but in future switch to post
-        */
-
-        var request = $http({
-            method: "get",
-            headers: {'content-type': 'application/json'},
-            url: "https://irail.dev/checkins",
-        }).success(function(response){
-          // Check if checked in
-
-          for (var i = 0; i < response.length; i++) {
-            if (response[i]['@id'] == dep['@id']) {
-                $(e.target).toggleClass('label-warning');
-                if ($(e.target)[0]['innerHTML'] == 'Check in') {
-                  $(e.target)[0]['innerHTML'] = 'Check out';
-                } else {
-                  $(e.target)[0]['innerHTML'] = 'Check in';
-                }
-            }
-          }
-        }).error(function(error){
-          console.log('ERROR');
-        });
+        //   for (var i = 0; i < response.length; i++) {
+        //     if (response[i]['@id'] == dep['@id']) {
+        //       $(e.target).toggleClass('label-warning');
+        //       if ($(e.target)[0]['innerHTML'] == 'Check in') {
+        //         $(e.target)[0]['innerHTML'] = 'Check out';
+        //       } else {
+        //         $(e.target)[0]['innerHTML'] = 'Check in';
+        //       }
+        //     }
+        //   }
+        // }).error(function(error){
+        //   console.log('ERROR');
+        // });
 
 
 
 
-    }).
-    error(function(data, status, headers, config) {
-      // called asynchronously if an error occurs
-      // or server returns response with an error status.
-      console.log('failure');
-    });
+//       }).
+// error(function(data, status, headers, config) {
+//       // called asynchronously if an error occurs
+//       // or server returns response with an error status.
+//       console.log('failure');
+//     });
 
-    
-  
-  };
+
+
+};
 
 
   /**
    * Resets the route planner to default values
    */
-  $scope.resetplanner = function (e) {
+   $scope.resetplanner = function (e) {
     e.stopPropagation();
     e.preventDefault();
     $scope.error = false;
@@ -347,10 +367,10 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
 };
 
 angular.module("irailapp.controllers")
-    .controller("PlannerCtrl", [
-        "$scope",
-        "$http",
-        "$filter",
-        "$timeout",
-        PlannerCtrl
-    ]);
+.controller("PlannerCtrl", [
+  "$scope",
+  "$http",
+  "$filter",
+  "$timeout",
+  PlannerCtrl
+  ]);

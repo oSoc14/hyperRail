@@ -56,6 +56,16 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
 
       $http.get($urlInWindow)
       .success(function (data) {
+        /*
+        * In the code below we tried to obtain the departure URI's of the corresponding routes
+        * We did this by parsing the vehicle of that route and them loop through the departure['@id'] to match
+        * the corresponding departure-URI
+        *
+        * Problem, this happens asynchronous in the loop and is very slowly
+        *
+        * Solution: add the departure-URI serverside in the irail-API
+        * 
+        */
         // procedure to obtain the departure URI and put it in the JSON
         for(var i=0; i<data.connection.length;i++)
         {
@@ -87,6 +97,9 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
 
           data.connection[i].uri = uri;
         }
+        /*
+        **********************************************************************
+        */
 
         $scope.parseResults(data);
 
@@ -165,7 +178,7 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
   /**
    * Save the entered data and request
    */
-//    $scope.checkin = function (e) {
+   $scope.checkin = function (e) {
 //     var con = $scope.connections[$(e.target).data('id')];
 
 //     var veh = con['departure']['vehicle'].split(".");
@@ -223,52 +236,7 @@ var PlannerCtrl = function ($scope, $http, $filter, $timeout) {
 
 
 
-// };
-
-$scope.isCheckedIn = function (e) {
-  console.log("yop");
-  var con = $scope.connections[$(e.target).data('id')];
-
-  var uri = $scope.connections[1].uri;
-  console.log( $scope.connections[1]);
-
-  
-        /**
-          Send post request with complete URI of departure and id of user for storage in DB
-          Currently we use get but in future switch to post
-          */
-
-        //   var request = $http({
-        //     method: "get",
-        //     headers: {'content-type': 'application/json'},
-        //     url: "https://irail.dev/checkins",
-        //   }).success(function(response){
-        //   // Check if checked in
-
-        //   for (var i = 0; i < response.length; i++) {
-        //     if (response[i]['@id'] == dep['@id']) {
-        //       $(e.target).toggleClass('label-warning');
-        //       if ($(e.target)[0]['innerHTML'] == 'Check in') {
-        //         $(e.target)[0]['innerHTML'] = 'Check out';
-        //       } else {
-        //         $(e.target)[0]['innerHTML'] = 'Check in';
-        //       }
-        //     }
-        //   }
-        // }).error(function(error){
-        //   console.log('ERROR');
-        // });
-
-
-
-
-//       }).
-// error(function(data, status, headers, config) {
-//       // called asynchronously if an error occurs
-//       // or server returns response with an error status.
-//       console.log('failure');
-//     });
-
+};
 
 
 };
